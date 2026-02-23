@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-motor
-pymongo
-bcrypt
-python-jose[cryptography]
-pydantic[email]
