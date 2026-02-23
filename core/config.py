@@ -1,0 +1,3 @@
+JWT_SECRET = "super_secret_key"
+JWT_ALGO = "HS256"
+JWT_EXPIRE_MINUTES = 60
