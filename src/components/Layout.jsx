@@ -1,6 +1,8 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { api } from '../api'
+import NotificationCenter from './NotificationCenter'
+
 
 export default function Layout() {
   const [user, setUser] = useState(null)
@@ -27,66 +29,73 @@ export default function Layout() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="text-xl font-bold text-brand-600 tracking-tight">
-            Auction
+    <div className="min-h-screen flex flex-col selection:bg-indigo-500/30">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#030712]/80 border-b border-white/5">
+        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+          <Link to="/" className="text-xl gradient-text tracking-tighter hover:opacity-80 transition-opacity">
+            AUCTION.
           </Link>
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-5">
             <Link
               to="/"
-              className="text-slate-600 hover:text-brand-600 font-medium transition"
+              className="text-slate-400 hover:text-white font-semibold text-[11px] uppercase tracking-wider transition-all"
             >
-              Auctions
+              Discover
             </Link>
             {loading ? (
-              <span className="text-slate-400 text-sm">...</span>
+              <span className="text-slate-600">
+                <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+              </span>
             ) : user ? (
               <>
                 <Link
                   to="/dashboard"
-                  className="text-slate-600 hover:text-brand-600 font-medium transition"
+                  className="text-slate-400 hover:text-white font-semibold text-[11px] uppercase tracking-wider transition-all"
                 >
                   Dashboard
                 </Link>
                 {user.role === 'seller' && (
                   <Link
                     to="/create"
-                    className="btn-primary text-sm"
+                    className="btn-primary py-2 text-[10px] uppercase tracking-widest"
                   >
-                    Create Auction
+                    Post Auction
                   </Link>
                 )}
-                <span className="text-slate-500 text-sm hidden sm:inline">
+                <NotificationCenter />
+                <div className="h-6 w-[1px] bg-slate-800 mx-1 hidden sm:block"></div>
+                <span className="text-slate-300 text-xs font-semibold hidden sm:inline">
                   {user.name}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="text-slate-500 hover:text-red-600 text-sm font-medium"
+                  className="text-slate-500 hover:text-red-400 text-[9px] font-bold uppercase tracking-widest transition-colors"
                 >
                   Logout
                 </button>
               </>
             ) : (
-              <>
-                <Link to="/login" className="btn-secondary text-sm">
+              <div className="flex items-center gap-4">
+                <Link to="/login" className="text-slate-400 hover:text-white text-[11px] font-semibold uppercase tracking-wider">
                   Login
                 </Link>
-                <Link to="/register" className="btn-primary text-sm">
-                  Register
+                <Link to="/register" className="btn-primary py-2 px-6 text-[10px] uppercase tracking-widest">
+                  Join Now
                 </Link>
-              </>
+              </div>
             )}
           </nav>
         </div>
       </header>
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-8">
         <Outlet />
       </main>
-      <footer className="border-t border-slate-200 py-4 text-center text-slate-500 text-sm">
-        Auction App — React + FastAPI + MongoDB
+      <footer className="border-t border-white/5 py-8 text-center bg-[#030712]/50 backdrop-blur-sm">
+        <p className="text-slate-600 text-[10px] font-bold uppercase tracking-[0.3em]">
+          Auction System — 2026
+        </p>
       </footer>
     </div>
   )
 }
+

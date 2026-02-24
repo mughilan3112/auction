@@ -1,6 +1,7 @@
 from bson import ObjectId
 from fastapi import HTTPException
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
 
 from bids.models import BidDocument
 from bids.repository import insert_bid, find_highest_bid_for_auction
@@ -17,9 +18,24 @@ async def place_bid(
         raise HTTPException(status_code=404, detail="Auction not found")
     if auction["status"] != "active":
         raise HTTPException(status_code=400, detail="Auction is not active")
-    now = datetime.utcnow()
-    if now >= auction["end_time"]:
-        raise HTTPException(status_code=400, detail="Auction already ended")
+    now = datetime.now(timezone.utc)
+    
+    start_time = auction["start_time"]
+    if start_time.tzinfo is None:
+        start_time = start_time.replace(tzinfo=timezone.utc)
+        
+    end_time = auction["end_time"]
+    if end_time.tzinfo is None:
+        end_time = end_time.replace(tzinfo=timezone.utc)
+
+    if now < start_time:
+        raise HTTPException(status_code=400, detail="Auction has not started")
+    if now >= end_time:
+        if auction["status"] == "active":
+            await update_auction_fields(auction_id, {"status": "closed"})
+        raise HTTPException(status_code=400, detail="Auction has ended")
+
+
     if bidder_id == auction["seller_id"]:
         raise HTTPException(status_code=403, detail="Seller cannot bid on own auction")
 
@@ -33,10 +49,11 @@ async def place_bid(
             status_code=400, detail=f"Bid must be at least {min_required}"
         )
 
-    if auction["end_time"] - now <= BONUS_TIME:
+    if end_time - now <= BONUS_TIME:
         await update_auction_fields(
-            auction_id, {"end_time": auction["end_time"] + BONUS_TIME}
+            auction_id, {"end_time": end_time + BONUS_TIME}
         )
+
 
     bid = BidDocument(auction_id=auction_id, bidder_id=bidder_id, amount=amount)
     bid_id = await insert_bid(bid.to_dict())

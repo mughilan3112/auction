@@ -48,3 +48,15 @@ async def get_seller(id: str):
         return seller
     except Exception:
         raise HTTPException(400, "Invalid seller ID")
+
+
+@router.put("/me")
+async def update_seller(data: dict, user=Depends(get_current_user)):
+    if "store_name" not in data:
+        raise HTTPException(400, "store_name is required")
+    await db.sellers.update_one(
+        {"user_id": user["_id"]},
+        {"$set": {"store_name": data["store_name"]}}
+    )
+    return {"message": "Store updated"}
+

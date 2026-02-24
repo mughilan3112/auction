@@ -10,6 +10,8 @@ class AuctionCreate(BaseModel):
     min_increment: float = Field(..., gt=0)
     start_time: datetime
     end_time: datetime
+    category: Optional[str] = "Others"
+
 
 
 class AuctionResponse(BaseModel):
@@ -24,13 +26,23 @@ class AuctionResponse(BaseModel):
     start_time: datetime
     end_time: datetime
     status: str
+    image_paths: list[str] = []
     created_at: datetime
     updated_at: datetime
+    category: str
+    stats: Optional[dict] = None
+
+
 
 
 class AuctionListResponse(BaseModel):
     id: str
     title: str
     current_price: float
+    start_time: datetime
     end_time: datetime
     status: str
+    category: Optional[str] = None
+    image_path: Optional[str] = None
+
+

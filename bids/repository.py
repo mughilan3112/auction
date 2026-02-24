@@ -19,3 +19,35 @@ async def find_highest_bid_for_auction(auction_id: ObjectId) -> Optional[dict]:
     return await bids_collection.find_one(
         {"auction_id": auction_id}, sort=[("amount", -1)]
     )
+
+
+async def get_bid_stats(auction_id: ObjectId) -> dict:
+    pipeline = [
+        {"$match": {"auction_id": auction_id}},
+        {
+            "$group": {
+                "_id": "$auction_id",
+                "total_bids": {"$sum": 1},
+                "average_bid": {"$avg": "$amount"},
+                "highest_bid": {"$max": "$amount"},
+                "lowest_bid": {"$min": "$amount"}
+            }
+        }
+    ]
+    cursor = bids_collection.aggregate(pipeline)
+    result = await cursor.to_list(length=1)
+    if result:
+        res = result[0]
+        return {
+            "total_bids": res.get("total_bids", 0),
+            "average_bid": res.get("average_bid", 0),
+            "highest_bid": res.get("highest_bid", 0),
+            "lowest_bid": res.get("lowest_bid", 0)
+        }
+    return {
+        "total_bids": 0,
+        "average_bid": 0,
+        "highest_bid": 0,
+        "lowest_bid": 0
+    }
+

@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import Auctions from './pages/Auctions'
 import AuctionDetail from './pages/AuctionDetail'
 import CreateAuction from './pages/CreateAuction'
+import EditAuction from './pages/EditAuction'
 
 function App() {
   return (
@@ -16,11 +17,13 @@ function App() {
         <Route path="register" element={<Register />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="auctions/:id" element={<AuctionDetail />} />
+        <Route path="edit/:id" element={<EditAuction />} />
         <Route path="create" element={<CreateAuction />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   )
 }
+
 
 export default App

@@ -12,3 +12,8 @@ async def insert_winner(winner_data: dict) -> ObjectId:
 
 async def find_winner_by_auction_id(auction_id: ObjectId) -> Optional[dict]:
     return await winners_collection.find_one({"auction_id": auction_id})
+
+
+async def delete_winner_by_auction_id(auction_id: ObjectId):
+    await winners_collection.delete_one({"auction_id": auction_id})
+
