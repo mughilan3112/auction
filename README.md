@@ -26,6 +26,7 @@ venv\Scripts\activate
 # macOS/Linux:
 source venv/bin/activate
 pip install -r requirements.txt
+python -m pip install "uvicorn[standard]"
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -35,6 +36,7 @@ API docs: http://localhost:8000/docs
 
 ```bash
 npm install
+npm install --legacy-peer-deps
 npm run dev
 ```
 
