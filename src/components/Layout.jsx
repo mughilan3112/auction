@@ -54,13 +54,23 @@ export default function Layout() {
                 >
                   Dashboard
                 </Link>
-                {user.role === 'seller' && (
+                { /* Show control for all users but enable only for sellers */ }
+                {user.role === 'seller' ? (
                   <Link
                     to="/create"
                     className="btn-primary py-2 text-[10px] uppercase tracking-widest"
                   >
                     Post Auction
                   </Link>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    title="Only sellers can post auctions"
+                    className="btn-primary py-2 text-[10px] uppercase tracking-widest opacity-50 cursor-not-allowed"
+                  >
+                    Post Auction
+                  </button>
                 )}
                 <NotificationCenter />
                 <div className="h-6 w-[1px] bg-slate-800 mx-1 hidden sm:block"></div>
