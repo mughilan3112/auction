@@ -21,6 +21,29 @@ class EmbeddedBid(BaseModel):
     bid_time: datetime
 
 
+class EmbeddedBuyerInfo(BaseModel):
+    """Buyer (winner) details embedded in auction document"""
+    buyer_id: str
+    buyer_name: str
+    buyer_email: str
+
+
+class EmbeddedSellerInfo(BaseModel):
+    """Seller details embedded in auction document"""
+    seller_id: str
+    seller_name: str
+    seller_email: str
+    store_name: Optional[str] = None
+
+
+class EmbeddedWinnerInfo(BaseModel):
+    """Complete winner information embedded in closed auction"""
+    final_price: float
+    declared_at: datetime
+    buyer_info: EmbeddedBuyerInfo
+    seller_info: EmbeddedSellerInfo
+
+
 class AuctionResponse(BaseModel):
     id: str
     seller_id: str
@@ -39,18 +62,18 @@ class AuctionResponse(BaseModel):
     category: str
     stats: Optional[dict] = None
     bids: list[EmbeddedBid] = []  # Embedded bids (last N)
-
-
+    winner_info: Optional[EmbeddedWinnerInfo] = None  # Embedded winner info for closed auctions
 
 
 class AuctionListResponse(BaseModel):
+    """Response schema for listing auctions (simplified for list views)"""
     id: str
     title: str
     current_price: float
     start_time: datetime
     end_time: datetime
     status: str
-    category: Optional[str] = None
+    category: str = "Others"
     image_path: Optional[str] = None
-
-
+    winner_name: Optional[str] = None
+    winner_id: Optional[str] = None

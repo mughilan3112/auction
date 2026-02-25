@@ -59,10 +59,11 @@ export default function AuctionDetail() {
 
   useEffect(() => {
     if (!auction || auction.status !== 'closed') return
-    api.getWinner(id).then(({ ok, data }) => {
-      if (ok) setWinner(data)
-    })
-  }, [id, auction?.status])
+    // Use embedded winner_info from auction document instead of separate API call
+    if (auction.winner_info) {
+      setWinner(auction.winner_info)
+    }
+  }, [auction?.winner_info, auction?.status])
 
   useEffect(() => {
     if (auction?.min_increment != null && auction?.current_price != null) {
@@ -392,18 +393,91 @@ export default function AuctionDetail() {
               </form>
             )
           ) : (
-            <div className="glass-card !rounded-[2.5rem] p-10 bg-slate-950 text-white text-center border-white/5 shadow-xl">
-              <h3 className="text-2xl font-bold uppercase tracking-tighter mb-6 text-slate-500">Auction Finished</h3>
-              {winner ? (
-                <div className="space-y-3">
-                  <p className="text-emerald-400 font-bold text-[9px] uppercase tracking-[0.3em]">Item Sold</p>
-                  <p className="text-4xl font-bold gradient-text italic tracking-tighter">₹{Number(winner.final_price).toLocaleString('en-IN')}</p>
-                  <div className="pt-4 border-t border-white/5 opacity-50">
-                    <p className="text-[9px] font-bold uppercase tracking-widest">Auction Closed</p>
+            <div className="glass-card !rounded-[2.5rem] p-10 bg-slate-950 text-white text-center border-white/5 shadow-xl space-y-6">
+              <div>
+                <h3 className="text-2xl font-bold uppercase tracking-tighter mb-6 text-slate-500">Auction Finished</h3>
+                {winner ? (
+                  <div className="space-y-3">
+                    <p className="text-emerald-400 font-bold text-[9px] uppercase tracking-[0.3em]">Item Sold</p>
+                    <p className="text-4xl font-bold gradient-text italic tracking-tighter">₹{Number(winner.final_price).toLocaleString('en-IN')}</p>
+                    <div className="pt-4 border-t border-white/5 opacity-50">
+                      <p className="text-[9px] font-bold uppercase tracking-widest">Auction Closed</p>
+                    </div>
                   </div>
+                ) : (
+                  <p className="text-rose-400 text-[10px] font-bold uppercase tracking-[0.3em] py-3">No winner found</p>
+                )}
+              </div>
+
+              {/* Winner Details Section */}
+              {winner && winner.buyer_info && winner.seller_info && (
+                <div className="pt-6 border-t border-white/5 space-y-4">
+                  {/* For Seller: Show Buyer Details */}
+                  {user && user._id === auction?.seller_id && (
+                    <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-5 rounded-2xl border border-emerald-500/20">
+                      <p className="text-emerald-400 font-bold text-[8px] uppercase tracking-[0.2em] mb-3">🎯 Buyer Details</p>
+                      <div className="space-y-2 text-left">
+                        <div>
+                          <p className="text-[8px] text-slate-500 uppercase tracking-widest mb-0.5">Name</p>
+                          <p className="text-sm font-semibold text-white">{winner.buyer_info.buyer_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] text-slate-500 uppercase tracking-widest mb-0.5">Email</p>
+                          <p className="text-xs font-mono text-slate-300">{winner.buyer_info.buyer_email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* For Buyer: Show Seller Details */}
+                  {user && winner.buyer_info.buyer_id === String(user._id) && (
+                    <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 p-5 rounded-2xl border border-purple-500/20">
+                      <p className="text-purple-400 font-bold text-[8px] uppercase tracking-[0.2em] mb-3">🏪 Seller Details</p>
+                      <div className="space-y-2 text-left">
+                        <div>
+                          <p className="text-[8px] text-slate-500 uppercase tracking-widest mb-0.5">Name</p>
+                          <p className="text-sm font-semibold text-white">{winner.seller_info.seller_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] text-slate-500 uppercase tracking-widest mb-0.5">Email</p>
+                          <p className="text-xs font-mono text-slate-300">{winner.seller_info.seller_email}</p>
+                        </div>
+                        {winner.seller_info.store_name && (
+                          <div>
+                            <p className="text-[8px] text-slate-500 uppercase tracking-widest mb-0.5">Store</p>
+                            <p className="text-xs font-semibold text-indigo-400">{winner.seller_info.store_name}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* For Other Users: Show Winner Name */}
+                  {user && user._id !== auction?.seller_id && winner.buyer_info.buyer_id !== String(user._id) && (
+                    <div className="bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 p-5 rounded-2xl border border-indigo-500/20">
+                      <p className="text-indigo-400 font-bold text-[8px] uppercase tracking-[0.2em] mb-3">🏆 Winner</p>
+                      <div className="space-y-2 text-left">
+                        <div>
+                          <p className="text-[8px] text-slate-500 uppercase tracking-widest mb-0.5">Winner Name</p>
+                          <p className="text-sm font-semibold text-white">{winner.buyer_info.buyer_name}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* For Anonymous Users: Show Winner Name */}
+                  {!user && (
+                    <div className="bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 p-5 rounded-2xl border border-indigo-500/20">
+                      <p className="text-indigo-400 font-bold text-[8px] uppercase tracking-[0.2em] mb-3">🏆 Winner</p>
+                      <div className="space-y-2 text-left">
+                        <div>
+                          <p className="text-[8px] text-slate-500 uppercase tracking-widest mb-0.5">Winner Name</p>
+                          <p className="text-sm font-semibold text-white">{winner.buyer_info.buyer_name}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <p className="text-rose-400 text-[10px] font-bold uppercase tracking-[0.3em] py-3">No winner found</p>
               )}
             </div>
           )}

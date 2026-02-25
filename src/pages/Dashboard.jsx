@@ -23,6 +23,8 @@ export default function Dashboard() {
   const [user, setUser] = useState(null)
   const [seller, setSeller] = useState(null)
   const [myAuctions, setMyAuctions] = useState([])
+  const [wonAuctions, setWonAuctions] = useState([])
+  const [soldAuctions, setSoldAuctions] = useState([])
   const [storeName, setStoreName] = useState('')
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [editName, setEditName] = useState('')
@@ -47,8 +49,13 @@ export default function Dashboard() {
       setUser(data)
       setEditName(data.name)
       setEditEmail(data.email)
+      
+      // Fetch won auctions for all users
+      fetchWonAuctions()
+      
       if (data.role === 'seller') {
         fetchSellerData()
+        fetchSoldAuctions()
       }
     })
   }, [token, navigate])
@@ -65,6 +72,16 @@ export default function Dashboard() {
     }
     if (auctionsRes.ok) setMyAuctions(auctionsRes.data)
     setLoadingAuctions(false)
+  }
+
+  const fetchWonAuctions = async () => {
+    const { ok, data } = await api.getMyWonAuctions()
+    if (ok) setWonAuctions(data)
+  }
+
+  const fetchSoldAuctions = async () => {
+    const { ok, data } = await api.getMySoldAuctions()
+    if (ok) setSoldAuctions(data)
   }
 
   const handleUpdateProfile = async (e) => {
@@ -365,6 +382,181 @@ export default function Dashboard() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Won Auctions Section - For all users */}
+          {wonAuctions.length > 0 && (
+            <div className="space-y-8 mt-10">
+              <div className="flex items-center justify-between px-2">
+                <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                  🏆 Auctions Won
+                  <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full uppercase tracking-widest">
+                    {wonAuctions.length} Won
+                  </span>
+                </h2>
+              </div>
+
+              <div className="grid gap-6">
+                {wonAuctions.map((w, index) => (
+                  <div
+                    key={w.id}
+                    className="group glass-card p-4 border-white/5 hover:border-emerald-500/30 hover:bg-slate-900/60 transition-all animate-float"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    {/* Product Image */}
+                    <div className="flex items-start gap-6 mb-4">
+                      <div className="w-24 h-24 bg-slate-900 rounded-[1.2rem] overflow-hidden shrink-0 border border-white/5 relative">
+                        {w.auction_info?.image_path ? (
+                          <img
+                            src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${w.auction_info.image_path}`}
+                            alt={w.auction_info?.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-800 font-black text-4xl">🏷️</div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-bold text-white truncate tracking-tight mb-2">
+                          {w.auction_info?.title}
+                        </h3>
+                        <p className="text-sm text-slate-400 line-clamp-2 mb-3">
+                          {w.auction_info?.description}
+                        </p>
+                        
+                        {/* Price Info */}
+                        <div className="flex gap-6 items-center">
+                          <div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Winning Bid</span>
+                            <span className="text-xl font-bold text-emerald-400">₹{w.final_price.toLocaleString('en-IN')}</span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Starting Price</span>
+                            <span className="text-sm font-semibold text-slate-400">₹{w.auction_info?.starting_price.toLocaleString('en-IN')}</span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Category</span>
+                            <span className="text-sm font-semibold text-indigo-400">{w.auction_info?.category || 'Others'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-4 grid md:grid-cols-2 gap-4">
+                      {/* Seller Info */}
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2">Seller Details</p>
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-white">{w.seller_info?.seller_name}</p>
+                          <p className="text-xs text-slate-400">{w.seller_info?.seller_email}</p>
+                          {w.seller_info?.store_name && (
+                            <p className="text-xs text-indigo-400 font-semibold">🏪 {w.seller_info.store_name}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Purchase Date */}
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2">Won On</p>
+                        <p className="text-sm font-semibold text-emerald-400">
+                          {new Date(w.declared_at).toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {new Date(w.declared_at).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sold Auctions Section - For sellers */}
+          {user?.role === 'seller' && soldAuctions.length > 0 && (
+            <div className="space-y-8 mt-10">
+              <div className="flex items-center justify-between px-2">
+                <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                  💰 Auctions Sold
+                  <span className="text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-3 py-1 rounded-full uppercase tracking-widest">
+                    {soldAuctions.length} Sold
+                  </span>
+                </h2>
+              </div>
+
+              <div className="grid gap-6">
+                {soldAuctions.map((w, index) => (
+                  <div
+                    key={w.id}
+                    className="group glass-card p-4 border-white/5 hover:border-purple-500/30 hover:bg-slate-900/60 transition-all animate-float"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    {/* Product Image */}
+                    <div className="flex items-start gap-6 mb-4">
+                      <div className="w-24 h-24 bg-slate-900 rounded-[1.2rem] overflow-hidden shrink-0 border border-white/5 relative">
+                        {w.auction_info?.image_path ? (
+                          <img
+                            src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${w.auction_info.image_path}`}
+                            alt={w.auction_info?.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-800 font-black text-4xl">🏷️</div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-bold text-white truncate tracking-tight mb-2">
+                          {w.auction_info?.title}
+                        </h3>
+                        <p className="text-sm text-slate-400 line-clamp-2 mb-3">
+                          {w.auction_info?.description}
+                        </p>
+                        
+                        {/* Price Info */}
+                        <div className="flex gap-6 items-center">
+                          <div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Sold For</span>
+                            <span className="text-xl font-bold text-purple-400">₹{w.final_price.toLocaleString('en-IN')}</span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Starting Price</span>
+                            <span className="text-sm font-semibold text-slate-400">₹{w.auction_info?.starting_price.toLocaleString('en-IN')}</span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Category</span>
+                            <span className="text-sm font-semibold text-indigo-400">{w.auction_info?.category || 'Others'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-4 grid md:grid-cols-2 gap-4">
+                      {/* Buyer Info */}
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2">Buyer Details</p>
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-white">{w.buyer_info?.buyer_name}</p>
+                          <p className="text-xs text-slate-400">{w.buyer_info?.buyer_email}</p>
+                        </div>
+                      </div>
+
+                      {/* Sale Date */}
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2">Sold On</p>
+                        <p className="text-sm font-semibold text-purple-400">
+                          {new Date(w.declared_at).toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {new Date(w.declared_at).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

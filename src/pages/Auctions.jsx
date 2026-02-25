@@ -145,14 +145,6 @@ export default function Auctions() {
           <div className="relative z-10">
             <h2 className="text-3xl font-bold text-white mb-2 tracking-tighter">Welcome back, {user.name.split(' ')[0]}.</h2>
             <p className="text-indigo-300 font-semibold uppercase tracking-widest text-[10px] mb-6">Your authorization is verified. Elite assets are ready for your inspection.</p>
-            <div className="flex gap-4">
-              <Link to="/dashboard" className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-500 transition-all">
-                Personal Console
-              </Link>
-              <div className="px-6 py-2 border border-white/10 text-slate-400 rounded-xl text-[10px] font-bold uppercase tracking-widest">
-                Status: Operational
-              </div>
-            </div>
           </div>
         </div>
       ) : (

@@ -232,7 +232,7 @@ def _format_auction_response(auction: dict, stats: dict = None) -> dict:
     if end_time.tzinfo is None:
         end_time = end_time.replace(tzinfo=timezone.utc)
 
-    return {
+    response = {
         "id": str(auction["_id"]),
         "seller_id": str(auction["seller_id"]),
         "title": auction["title"],
@@ -261,6 +261,20 @@ def _format_auction_response(auction: dict, stats: dict = None) -> dict:
             for i, b in enumerate(auction.get("bids", []))
         ],
     }
+
+    # Include embedded winner info if auction is closed
+    if auction.get("winner_info"):
+        winner_info = auction["winner_info"]
+        response["winner_info"] = {
+            "final_price": winner_info.get("final_price"),
+            "declared_at": winner_info.get("declared_at"),
+            "buyer_info": winner_info.get("buyer_info"),
+            "seller_info": winner_info.get("seller_info"),
+        }
+    else:
+        response["winner_info"] = None
+
+    return response
 
 
 

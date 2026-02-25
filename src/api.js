@@ -169,6 +169,18 @@ export const api = {
     return { ok: res.ok, data, status: res.status };
   },
 
+  async getMyWonAuctions() {
+    const res = await fetch(`${API_BASE}/winners/my-wins`, { headers: headers(true) });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, data: Array.isArray(data) ? data : [], status: res.status };
+  },
+
+  async getMySoldAuctions() {
+    const res = await fetch(`${API_BASE}/winners/my-sales`, { headers: headers(true) });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, data: Array.isArray(data) ? data : [], status: res.status };
+  },
+
   async listNotifications() {
     const res = await fetch(`${API_BASE}/notifications/`, { headers: headers(true) });
     const data = await res.json().catch(() => ({}));
