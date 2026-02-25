@@ -6,9 +6,8 @@ import os
 from auth.routes import router as auth_router
 from users.routes import router as user_router
 from sellers.routes import router as seller_router
-from auctions.router import router as auctions_router
+from auctions.router import router as auctions_router, winners_router
 from bids.router import router as bids_router
-from winners.router import router as winners_router
 from notifications.router import router as notifications_router
 
 

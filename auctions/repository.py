@@ -74,6 +74,38 @@ async def close_auction(auction_id: ObjectId) -> bool:
     return result.matched_count == 1
 
 
+async def find_winners_by_buyer_id(buyer_id: ObjectId) -> List[dict]:
+    """Find all auctions won by a specific buyer by querying auctions collection"""
+    cursor = auctions_collection.find({
+        "status": "closed",
+        "winner_info.buyer_info.buyer_id": str(buyer_id)
+    })
+    return await cursor.to_list(length=None)
+
+
+async def find_winners_by_seller_id(seller_id: ObjectId) -> List[dict]:
+    """Find all auctions sold by a specific seller by querying auctions collection"""
+    # First find their seller record
+    seller_doc = await db.sellers.find_one({"user_id": seller_id})
+    if not seller_doc:
+        return []
+
+    cursor = auctions_collection.find({
+        "seller_id": seller_doc["_id"],
+        "status": "closed",
+        "winner_info": {"$exists": True}
+    })
+    return await cursor.to_list(length=None)
+
+
+async def clear_winner_info(auction_id: ObjectId):
+    """Unset the winner_info field from the auction document"""
+    await auctions_collection.update_one(
+        {"_id": auction_id}, 
+        {"$unset": {"winner_info": ""}}
+    )
+
+
 async def delete_auction(auction_id: ObjectId) -> bool:
     result = await auctions_collection.delete_one({"_id": auction_id})
     return result.deleted_count == 1

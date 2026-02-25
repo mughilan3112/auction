@@ -36,12 +36,34 @@ class EmbeddedSellerInfo(BaseModel):
     store_name: Optional[str] = None
 
 
+class EmbeddedAuctionInfo(BaseModel):
+    """Auction/Product details formatted for winner response"""
+    auction_id: str
+    title: str
+    description: str
+    starting_price: float
+    category: Optional[str] = None
+    image_path: Optional[str] = None
+
+
 class EmbeddedWinnerInfo(BaseModel):
     """Complete winner information embedded in closed auction"""
     final_price: float
     declared_at: datetime
     buyer_info: EmbeddedBuyerInfo
     seller_info: EmbeddedSellerInfo
+
+
+class WinnerResponse(BaseModel):
+    """Legacy compatible response for winner details, now sourced from auctions"""
+    id: str
+    auction_id: str
+    winner_id: str
+    final_price: float
+    declared_at: datetime
+    buyer_info: Optional[EmbeddedBuyerInfo] = None
+    seller_info: Optional[EmbeddedSellerInfo] = None
+    auction_info: Optional[EmbeddedAuctionInfo] = None
 
 
 class AuctionResponse(BaseModel):

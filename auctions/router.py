@@ -4,12 +4,23 @@ from datetime import datetime
 import os
 import uuid
 
-from auctions.schemas import AuctionCreate, AuctionResponse, AuctionListResponse
-from auctions.service import create_auction, list_active_auctions, get_auction, update_auction, delete_auction, list_seller_auctions
+from auctions.schemas import AuctionCreate, AuctionResponse, AuctionListResponse, WinnerResponse
+from auctions.service import (
+    create_auction, 
+    list_active_auctions, 
+    get_auction, 
+    update_auction, 
+    delete_auction, 
+    list_seller_auctions,
+    declare_winner,
+    get_my_won_auctions_logic,
+    get_my_sold_auctions_logic
+)
 from users.routes import get_current_user
 from db import db
 
 router = APIRouter(prefix="/auctions", tags=["Auctions"])
+winners_router = APIRouter(prefix="/winners", tags=["Winners"])
 
 UPLOAD_DIR = "static/uploads"
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
@@ -148,5 +159,35 @@ async def delete_auction_api(
     except HTTPException:
         raise
     except Exception:
+        raise HTTPException(status_code=400, detail="Invalid auction ID")
+
+
+# --- Winners Endpoints (Now in Auctions Module) ---
+
+@winners_router.get("/my-wins", response_model=list[WinnerResponse])
+async def get_my_won_auctions(user=Depends(get_current_user)):
+    """Get all auctions won by the current user (as buyer)"""
+    try:
+        return await get_my_won_auctions_logic(user["_id"])
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@winners_router.get("/my-sales", response_model=list[WinnerResponse])
+async def get_my_sold_auctions(user=Depends(get_current_user)):
+    """Get all auctions sold by the current user (as seller)"""
+    try:
+        return await get_my_sold_auctions_logic(user["_id"])
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@winners_router.get("/{auction_id}", response_model=WinnerResponse)
+async def declare_winner_api(auction_id: str):
+    try:
+        return await declare_winner(ObjectId(auction_id))
+    except Exception as e:
+        if hasattr(e, "status_code"):
+            raise e
         raise HTTPException(status_code=400, detail="Invalid auction ID")
 

@@ -49,10 +49,10 @@ export default function Dashboard() {
       setUser(data)
       setEditName(data.name)
       setEditEmail(data.email)
-      
+
       // Fetch won auctions for all users
       fetchWonAuctions()
-      
+
       if (data.role === 'seller') {
         fetchSellerData()
         fetchSoldAuctions()
@@ -385,11 +385,13 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Won Auctions Section - For all users */}
-          {wonAuctions.length > 0 && (
-            <div className="space-y-8 mt-10">
-              <div className="flex items-center justify-between px-2">
-                <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+          {/* Won & Sold — Side by Side Columns — Partitioned Layout */}
+          <div className={`grid grid-cols-1 ${user?.role === 'seller' ? 'lg:grid-cols-2' : ''} gap-8 pt-8 border-t border-white/5`}>
+
+            {/* LEFT PARTITION — Auctions Won (Universal Visibility) */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 px-1">
+                <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
                   🏆 Auctions Won
                   <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full uppercase tracking-widest">
                     {wonAuctions.length} Won
@@ -397,171 +399,174 @@ export default function Dashboard() {
                 </h2>
               </div>
 
-              <div className="grid gap-6">
-                {wonAuctions.map((w, index) => (
-                  <div
-                    key={w.id}
-                    className="group glass-card p-4 border-white/5 hover:border-emerald-500/30 hover:bg-slate-900/60 transition-all animate-float"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    {/* Product Image */}
-                    <div className="flex items-start gap-6 mb-4">
-                      <div className="w-24 h-24 bg-slate-900 rounded-[1.2rem] overflow-hidden shrink-0 border border-white/5 relative">
-                        {w.auction_info?.image_path ? (
-                          <img
-                            src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${w.auction_info.image_path}`}
-                            alt={w.auction_info?.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-800 font-black text-4xl">🏷️</div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-white truncate tracking-tight mb-2">
-                          {w.auction_info?.title}
-                        </h3>
-                        <p className="text-sm text-slate-400 line-clamp-2 mb-3">
-                          {w.auction_info?.description}
-                        </p>
-                        
-                        {/* Price Info */}
-                        <div className="flex gap-6 items-center">
-                          <div>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Winning Bid</span>
-                            <span className="text-xl font-bold text-emerald-400">₹{w.final_price.toLocaleString('en-IN')}</span>
-                          </div>
-                          <div>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Starting Price</span>
-                            <span className="text-sm font-semibold text-slate-400">₹{w.auction_info?.starting_price.toLocaleString('en-IN')}</span>
-                          </div>
-                          <div>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Category</span>
-                            <span className="text-sm font-semibold text-indigo-400">{w.auction_info?.category || 'Others'}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-white/5 pt-4 grid md:grid-cols-2 gap-4">
-                      {/* Seller Info */}
-                      <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2">Seller Details</p>
-                        <div className="space-y-2">
-                          <p className="text-sm font-semibold text-white">{w.seller_info?.seller_name}</p>
-                          <p className="text-xs text-slate-400">{w.seller_info?.seller_email}</p>
-                          {w.seller_info?.store_name && (
-                            <p className="text-xs text-indigo-400 font-semibold">🏪 {w.seller_info.store_name}</p>
+              {wonAuctions.length === 0 ? (
+                <div className="glass-card p-16 text-center border-dashed border-slate-800">
+                  <div className="text-5xl mb-4 opacity-20">🏆</div>
+                  <p className="text-slate-500 font-semibold text-sm">No auctions won yet</p>
+                </div>
+              ) : (
+                <div className="space-y-5 max-h-[700px] overflow-y-auto no-scrollbar pr-1">
+                  {wonAuctions.map((w, index) => (
+                    <div
+                      key={w.id}
+                      className="group glass-card p-5 border-white/5 hover:border-emerald-500/30 hover:bg-slate-900/60 transition-all animate-float"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      {/* Product Header */}
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="w-16 h-16 bg-slate-900 rounded-xl overflow-hidden shrink-0 border border-white/5">
+                          {w.auction_info?.image_path ? (
+                            <img
+                              src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${w.auction_info.image_path}`}
+                              alt={w.auction_info?.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-800 font-black text-2xl">🏷️</div>
                           )}
                         </div>
-                      </div>
-
-                      {/* Purchase Date */}
-                      <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2">Won On</p>
-                        <p className="text-sm font-semibold text-emerald-400">
-                          {new Date(w.declared_at).toLocaleDateString()}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          {new Date(w.declared_at).toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Sold Auctions Section - For sellers */}
-          {user?.role === 'seller' && soldAuctions.length > 0 && (
-            <div className="space-y-8 mt-10">
-              <div className="flex items-center justify-between px-2">
-                <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-                  💰 Auctions Sold
-                  <span className="text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-3 py-1 rounded-full uppercase tracking-widest">
-                    {soldAuctions.length} Sold
-                  </span>
-                </h2>
-              </div>
-
-              <div className="grid gap-6">
-                {soldAuctions.map((w, index) => (
-                  <div
-                    key={w.id}
-                    className="group glass-card p-4 border-white/5 hover:border-purple-500/30 hover:bg-slate-900/60 transition-all animate-float"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    {/* Product Image */}
-                    <div className="flex items-start gap-6 mb-4">
-                      <div className="w-24 h-24 bg-slate-900 rounded-[1.2rem] overflow-hidden shrink-0 border border-white/5 relative">
-                        {w.auction_info?.image_path ? (
-                          <img
-                            src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${w.auction_info.image_path}`}
-                            alt={w.auction_info?.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-800 font-black text-4xl">🏷️</div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-white truncate tracking-tight mb-2">
-                          {w.auction_info?.title}
-                        </h3>
-                        <p className="text-sm text-slate-400 line-clamp-2 mb-3">
-                          {w.auction_info?.description}
-                        </p>
-                        
-                        {/* Price Info */}
-                        <div className="flex gap-6 items-center">
-                          <div>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Sold For</span>
-                            <span className="text-xl font-bold text-purple-400">₹{w.final_price.toLocaleString('en-IN')}</span>
-                          </div>
-                          <div>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Starting Price</span>
-                            <span className="text-sm font-semibold text-slate-400">₹{w.auction_info?.starting_price.toLocaleString('en-IN')}</span>
-                          </div>
-                          <div>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-1">Category</span>
-                            <span className="text-sm font-semibold text-indigo-400">{w.auction_info?.category || 'Others'}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-white/5 pt-4 grid md:grid-cols-2 gap-4">
-                      {/* Buyer Info */}
-                      <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2">Buyer Details</p>
-                        <div className="space-y-2">
-                          <p className="text-sm font-semibold text-white">{w.buyer_info?.buyer_name}</p>
-                          <p className="text-xs text-slate-400">{w.buyer_info?.buyer_email}</p>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base font-bold text-white truncate tracking-tight mb-1">
+                            {w.auction_info?.title || 'Auction Item'}
+                          </h3>
+                          <p className="text-xs text-slate-500 line-clamp-1">
+                            {w.auction_info?.description}
+                          </p>
                         </div>
                       </div>
 
-                      {/* Sale Date */}
-                      <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2">Sold On</p>
-                        <p className="text-sm font-semibold text-purple-400">
-                          {new Date(w.declared_at).toLocaleDateString()}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          {new Date(w.declared_at).toLocaleTimeString()}
-                        </p>
+                      {/* Price Row */}
+                      <div className="flex items-center gap-5 mb-4 px-1">
+                        <div>
+                          <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-0.5">Winning Bid</span>
+                          <span className="text-lg font-bold text-emerald-400">₹{w.final_price?.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-0.5">Starting Price</span>
+                          <span className="text-sm font-semibold text-slate-400">₹{w.auction_info?.starting_price?.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-0.5">Category</span>
+                          <span className="text-xs font-semibold text-indigo-400">{w.auction_info?.category || 'Others'}</span>
+                        </div>
+                      </div>
+
+                      {/* Seller & Date */}
+                      <div className="border-t border-white/5 pt-3 grid grid-cols-2 gap-3">
+                        <div className="bg-slate-900/50 p-3 rounded-lg border border-white/5">
+                          <p className="text-[8px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Seller Details</p>
+                          <p className="text-sm font-semibold text-white">{w.seller_info?.seller_name}</p>
+                          <p className="text-[11px] text-slate-400 truncate">{w.seller_info?.seller_email}</p>
+                          {w.seller_info?.store_name && (
+                            <p className="text-[11px] text-indigo-400 font-semibold mt-1">🏪 {w.seller_info.store_name}</p>
+                          )}
+                        </div>
+                        <div className="bg-slate-900/50 p-3 rounded-lg border border-white/5">
+                          <p className="text-[8px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Won On</p>
+                          <p className="text-sm font-semibold text-emerald-400">
+                            {new Date(w.declared_at).toLocaleDateString()}
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            {new Date(w.declared_at).toLocaleTimeString()}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* RIGHT PARTITION — Auctions Sold (Strategic Seller Insight) */}
+            {user?.role === 'seller' && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 px-1">
+                  <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
+                    💰 Auctions Sold
+                    <span className="text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-3 py-1 rounded-full uppercase tracking-widest">
+                      {soldAuctions.length} Sold
+                    </span>
+                  </h2>
+                </div>
+
+                {soldAuctions.length === 0 ? (
+                  <div className="glass-card p-16 text-center border-dashed border-slate-800">
+                    <div className="text-5xl mb-4 opacity-20">💰</div>
+                    <p className="text-slate-500 font-semibold text-sm">No auctions sold yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-5 max-h-[700px] overflow-y-auto no-scrollbar pr-1">
+                    {soldAuctions.map((w, index) => (
+                      <div
+                        key={w.id}
+                        className="group glass-card p-5 border-white/5 hover:border-purple-500/30 hover:bg-slate-900/60 transition-all animate-float"
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        {/* Product Header */}
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className="w-16 h-16 bg-slate-900 rounded-xl overflow-hidden shrink-0 border border-white/5">
+                            {w.auction_info?.image_path ? (
+                              <img
+                                src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${w.auction_info.image_path}`}
+                                alt={w.auction_info?.title}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-800 font-black text-2xl">🏷️</div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-bold text-white truncate tracking-tight mb-1">
+                              {w.auction_info?.title || 'Auction Item'}
+                            </h3>
+                            <p className="text-xs text-slate-500 line-clamp-1">
+                              {w.auction_info?.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Price Row */}
+                        <div className="flex items-center gap-5 mb-4 px-1">
+                          <div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-0.5">Sold For</span>
+                            <span className="text-lg font-bold text-purple-400">₹{w.final_price?.toLocaleString('en-IN')}</span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-0.5">Starting Price</span>
+                            <span className="text-sm font-semibold text-slate-400">₹{w.auction_info?.starting_price?.toLocaleString('en-IN')}</span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 block mb-0.5">Category</span>
+                            <span className="text-xs font-semibold text-indigo-400">{w.auction_info?.category || 'Others'}</span>
+                          </div>
+                        </div>
+
+                        {/* Buyer & Date */}
+                        <div className="border-t border-white/5 pt-3 grid grid-cols-2 gap-3">
+                          <div className="bg-slate-900/50 p-3 rounded-lg border border-white/5">
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Buyer Details</p>
+                            <p className="text-sm font-semibold text-white">{w.buyer_info?.buyer_name}</p>
+                            <p className="text-[11px] text-slate-400 truncate">{w.buyer_info?.buyer_email}</p>
+                          </div>
+                          <div className="bg-slate-900/50 p-3 rounded-lg border border-white/5">
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Sold On</p>
+                            <p className="text-sm font-semibold text-purple-400">
+                              {new Date(w.declared_at).toLocaleDateString()}
+                            </p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              {new Date(w.declared_at).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   )
 }
-

@@ -58,12 +58,29 @@ export default function AuctionDetail() {
   }, [id, token])
 
   useEffect(() => {
-    if (!auction || auction.status !== 'closed') return
-    // Use embedded winner_info from auction document instead of separate API call
+    if (!auction) return
+
+    // Use embedded winner_info from auction document
     if (auction.winner_info) {
       setWinner(auction.winner_info)
+      return
     }
-  }, [auction?.winner_info, auction?.status])
+
+    // If auction end time has passed but no winner_info yet, re-fetch auction
+    // This triggers declare_winner on the backend and gets fresh data with winner embedded
+    const endTime = new Date(auction.end_time)
+    if (now >= endTime && !winner && auction.status !== 'closed') {
+      const refetch = async () => {
+        const res = await api.getAuction(id)
+        if (res.ok) {
+          setAuction(res.data)
+        }
+      }
+      // Small delay to avoid tight loops
+      const timeout = setTimeout(refetch, 2000)
+      return () => clearTimeout(timeout)
+    }
+  }, [auction?.winner_info, auction?.status, now >= new Date(auction?.end_time || 0)])
 
   useEffect(() => {
     if (auction?.min_increment != null && auction?.current_price != null) {
@@ -344,12 +361,7 @@ export default function AuctionDetail() {
               </div>
             </div>
           ) : !isActuallyEnded ? (
-            isOwner ? (
-              <div className="p-10 glass-card !rounded-[2.5rem] border-dashed border-slate-800 text-center">
-                <p className="text-indigo-400 font-black text-[10px] uppercase tracking-[0.2em] mb-2">Owner Designation</p>
-                <p className="text-slate-500 font-medium text-xs">Operation controls are localized in the upper command bar.</p>
-              </div>
-            ) : (
+            isOwner ? null : (
               <form onSubmit={handlePlaceBid} className="space-y-4">
                 <div className="glass-card !rounded-[2.5rem] p-6 border-indigo-500/30 bg-gradient-to-br from-indigo-900/40 to-slate-900 animate-float shadow-xl">
                   <div className="flex items-center gap-3 mb-6">
@@ -413,7 +425,7 @@ export default function AuctionDetail() {
               {winner && winner.buyer_info && winner.seller_info && (
                 <div className="pt-6 border-t border-white/5 space-y-4">
                   {/* For Seller: Show Buyer Details */}
-                  {user && user._id === auction?.seller_id && (
+                  {isOwner && (
                     <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-5 rounded-2xl border border-emerald-500/20">
                       <p className="text-emerald-400 font-bold text-[8px] uppercase tracking-[0.2em] mb-3">🎯 Buyer Details</p>
                       <div className="space-y-2 text-left">
@@ -430,7 +442,7 @@ export default function AuctionDetail() {
                   )}
 
                   {/* For Buyer: Show Seller Details */}
-                  {user && winner.buyer_info.buyer_id === String(user._id) && (
+                  {user && winner.buyer_info.buyer_id === user.id && (
                     <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 p-5 rounded-2xl border border-purple-500/20">
                       <p className="text-purple-400 font-bold text-[8px] uppercase tracking-[0.2em] mb-3">🏪 Seller Details</p>
                       <div className="space-y-2 text-left">
@@ -453,7 +465,7 @@ export default function AuctionDetail() {
                   )}
 
                   {/* For Other Users: Show Winner Name */}
-                  {user && user._id !== auction?.seller_id && winner.buyer_info.buyer_id !== String(user._id) && (
+                  {user && !isOwner && winner.buyer_info.buyer_id !== user.id && (
                     <div className="bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 p-5 rounded-2xl border border-indigo-500/20">
                       <p className="text-indigo-400 font-bold text-[8px] uppercase tracking-[0.2em] mb-3">🏆 Winner</p>
                       <div className="space-y-2 text-left">

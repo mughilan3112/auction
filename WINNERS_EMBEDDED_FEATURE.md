@@ -10,46 +10,32 @@ This feature implements embedded documentation in the winners collection to enab
 
 ### Data Model Changes
 
-#### Winners Collection - Before
+#### Auctions Collection - With Winner Info
 ```python
 {
   "_id": ObjectId,
-  "auction_id": ObjectId,
-  "winner_id": ObjectId,
-  "final_price": float,
-  "declared_at": datetime
-}
-```
-
-#### Winners Collection - After (Embedded)
-```python
-{
-  "_id": ObjectId,
-  "auction_id": ObjectId,
-  "winner_id": ObjectId,
-  "final_price": float,
-  "declared_at": datetime,
-  "buyer_info": {
-    "buyer_id": str,
-    "buyer_name": str,
-    "buyer_email": str
-  },
-  "seller_info": {
-    "seller_id": str,
-    "seller_name": str,
-    "seller_email": str,
-    "store_name": str (optional)
-  },
-  "auction_info": {
-    "auction_id": str,
-    "title": str,
-    "description": str,
-    "starting_price": float,
-    "category": str,
-    "image_path": str (optional)
+  "seller_id": ObjectId,
+  "title": str,
+  "status": "closed",
+  "current_price": float,
+  "winner_info": {
+    "final_price": float,
+    "declared_at": datetime,
+    "buyer_info": {
+      "buyer_id": str,
+      "buyer_name": str,
+      "buyer_email": str
+    },
+    "seller_info": {
+      "seller_id": str,
+      "seller_name": str,
+      "seller_email": str,
+      "store_name": str (optional)
+    }
   }
 }
 ```
+*Note: The separate `winners` collection has been decommissioned.*
 
 ## Implementation Details
 
@@ -146,10 +132,17 @@ This feature implements embedded documentation in the winners collection to enab
 ### Example MongoDB Queries
 ```javascript
 // Get all auctions won by a buyer
-db.winners.find({ "winner_id": ObjectId("...") })
+db.auctions.find({ 
+  "status": "closed", 
+  "winner_info.buyer_info.buyer_id": "..." 
+})
 
 // Get all auctions sold by a seller
-db.winners.find({ "seller_info.seller_id": "..." })
+db.auctions.find({ 
+  "seller_id": ObjectId("..."),
+  "status": "closed",
+  "winner_info": { "$exists": true }
+})
 ```
 
 ## Backward Compatibility
