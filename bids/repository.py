@@ -1,12 +1,45 @@
 from bson import ObjectId
 from typing import List, Optional
 from db import db
+from core.config import BIDS_EMBED_LIMIT
 
 bids_collection = db.bids
 
 
 async def insert_bid(bid_data: dict) -> ObjectId:
     result = await bids_collection.insert_one(bid_data)
+    # Also push a cleaned copy of the bid into the parent auction's embedded bids array
+    try:
+        # Exclude redundant fields when embedding (don't include auction_id or _id)
+        embedded_bid = {k: v for k, v in bid_data.items() if k not in ("auction_id", "_id")}
+        
+        # Get current bid count to assign bid_number for database clarity
+        auction = await db.auctions.find_one(
+            {"_id": bid_data["auction_id"]},
+            {"bids": 1}
+        )
+        current_bid_count = len(auction.get("bids", [])) if auction else 0
+        embedded_bid["bid_number"] = current_bid_count + 1
+        
+        # Push and trim to keep only the most recent N bids (hybrid model)
+        try:
+            await db.auctions.update_one(
+                {"_id": bid_data["auction_id"]},
+                {
+                    "$push": {
+                        "bids": {
+                            "$each": [embedded_bid],
+                            "$slice": -BIDS_EMBED_LIMIT,
+                        }
+                    }
+                },
+            )
+        except Exception:
+            # If embedding fails, keep primary bid in bids collection — don't break workflow
+            pass
+    except Exception:
+        # If embedding fails, keep primary bid in bids collection — don't break workflow
+        pass
     return result.inserted_id
 
 

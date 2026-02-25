@@ -13,6 +13,13 @@ class AuctionCreate(BaseModel):
     category: Optional[str] = "Others"
 
 
+class EmbeddedBid(BaseModel):
+    """Bid document embedded inside auction (no auction_id or _id)"""
+    bid_number: int  # Sequential bid number (1, 2, 3, etc)
+    bidder_id: str
+    amount: float
+    bid_time: datetime
+
 
 class AuctionResponse(BaseModel):
     id: str
@@ -31,6 +38,7 @@ class AuctionResponse(BaseModel):
     updated_at: datetime
     category: str
     stats: Optional[dict] = None
+    bids: list[EmbeddedBid] = []  # Embedded bids (last N)
 
 
 

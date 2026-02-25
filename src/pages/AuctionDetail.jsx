@@ -91,7 +91,27 @@ export default function AuctionDetail() {
     setBidding(false)
     if (ok) {
       setMessage('Bid placed successfully!')
-      setAuction((a) => (a ? { ...a, current_price: amount } : a))
+      setAuction((a) => {
+        if (!a) return a
+        const updated = { ...a, current_price: amount }
+        // If backend supplies embedded bids, append new bid locally to keep UI in sync
+        const newBid = {
+          bidder_id: data.bidder_id,
+          amount: data.amount,
+          bid_time: data.bid_time,
+        }
+        if (Array.isArray(updated.bids)) {
+          updated.bids = [...updated.bids, newBid]
+        }
+        // Update stats if present
+        if (updated.stats && typeof updated.stats.total_bids === 'number') {
+          updated.stats = { ...updated.stats, total_bids: updated.stats.total_bids + 1 }
+          if (!updated.stats.highest_bid || data.amount > updated.stats.highest_bid) {
+            updated.stats.highest_bid = data.amount
+          }
+        }
+        return updated
+      })
       setBidAmount((amount + (auction?.min_increment ?? 0)).toFixed(2))
     } else {
       setMessage(data.detail || 'Failed to place bid')
@@ -280,6 +300,33 @@ export default function AuctionDetail() {
                   <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest mb-1">Highest</p>
                   <p className="text-2xl font-bold text-indigo-400">₹{auction.stats.highest_bid.toFixed(0)}</p>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Embedded bids list (if available) */}
+          {Array.isArray(auction.bids) && auction.bids.length > 0 && (
+            <div className="p-6 glass-card bg-slate-950/80 border-white/5 !rounded-[2.5rem] space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white uppercase tracking-tighter">Recent Bids</h3>
+                <p className="text-sm text-slate-400">Total: {auction.bids.length}</p>
+              </div>
+
+              <div className="divide-y divide-white/5 max-h-64 overflow-y-auto no-scrollbar">
+                {auction.bids.slice().reverse().map((b, i) => {
+                  const time = b.bid_time ? new Date(b.bid_time) : null
+                  const bidderLabel = user && b.bidder_id === user.id ? 'You' : (b.bidder_id ? String(b.bidder_id).slice(-6) : '—')
+                  const bidLabel = b.bid_number ? `Bid ${b.bid_number}` : `#${i + 1}`
+                  return (
+                    <div key={i} className="py-3 flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-bold text-white">₹{Number(b.amount).toLocaleString('en-IN')}</div>
+                        <div className="text-[11px] text-slate-400">{bidderLabel} • {time ? time.toLocaleString() : '—'}</div>
+                      </div>
+                      <div className="text-xs text-slate-500">{bidLabel}</div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}

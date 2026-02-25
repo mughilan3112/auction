@@ -251,6 +251,15 @@ def _format_auction_response(auction: dict, stats: dict = None) -> dict:
         "updated_at": auction["updated_at"],
         "category": auction.get("category", "Others"),
         "stats": stats,
+        "bids": [
+            {
+                "bid_number": b.get("bid_number", i + 1),  # fallback to index if not present
+                "bidder_id": str(b.get("bidder_id")) if b.get("bidder_id") else None,
+                "amount": b.get("amount"),
+                "bid_time": b.get("bid_time"),
+            }
+            for i, b in enumerate(auction.get("bids", []))
+        ],
     }
 
 

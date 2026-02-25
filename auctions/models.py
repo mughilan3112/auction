@@ -30,6 +30,7 @@ class AuctionDocument:
         self.start_time: datetime = start_time
         self.end_time: datetime = end_time
         self.image_paths: list = image_paths or []
+        self.bids: list = []
         self.status: str = "active"
         self.created_at: datetime = datetime.now(timezone.utc)
         self.updated_at: datetime = datetime.now(timezone.utc)
